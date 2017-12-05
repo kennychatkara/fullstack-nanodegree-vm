@@ -1,0 +1,21 @@
+{% extends 'commontemplate.html' %}
+
+{% block title %}
+<title></title>
+{% endblock %}
+
+
+{% block content %}
+
+<h2 class="panel-title">Delete Item</h2>
+
+<div class="content-main">
+    <h3>Are you sure you want to delete item '{{ item.name }}' from '{{ item.category.name }}' category? </h3>
+
+    <form method="POST" action="{{ url_for('deleteItem', category_id = item.category_id, item_id = item.id) }}">
+        <input type="Submit" name="confirm_delete">
+        <a href="{{ url_for('showItems', category_id = item.category_id) }}">Cancel</a>
+    </form>
+</div>
+
+{% endblock %}

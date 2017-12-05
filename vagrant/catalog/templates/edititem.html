@@ -1,0 +1,54 @@
+{% extends 'commontemplate.html' %}
+
+{% block title %}
+<title></title>
+{% endblock %}
+
+
+{% block content %}
+
+<h2 class="panel-title">Edit Item</h2>
+
+<div class="content-main">
+    <form method="POST" action="{{ url_for('editItem', category_id = item.category_id, item_id = item.id) }}">
+        <div class="row form-content">
+            <div class="col-6 labels">
+                <label>Name:</label>
+                <br>
+                <label>Description:</label>
+                <br>
+                <label>Category:</label>
+                <br>
+            </div>
+
+            <div class="col-6 inputs">
+                <input type="text" name="name" placeholder="{{ item.name }}">
+                <br>
+                {% if item.description %}
+                <input type="text" name="description"  placeholder="{{ item.description }}">
+                {% else %}
+                <input type="text" name="description">
+                 {% endif %}
+                <br>
+
+                <select name="category">
+                    {% for category_record in categories %}
+                        {% if category_record.id == item.category_id %}
+                    <option selected value="{{ category_record.id }}">{{ category_record.name }}</option>
+                        {% else %}
+                    <option value="{{ category_record.id }}">{{ category_record.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <br>
+            </div>
+        </div>
+
+        <br>
+
+        <input class="submit-btn" type="Submit" value="Submit">
+        <a href="{{ url_for('showItems', category_id = item.category_id) }}">Cancel</a>
+    </form>
+</div>
+
+{% endblock %}

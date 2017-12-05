@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'framework.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'main.css') }}">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script src="https://apis.google.com/js/client:platform.js?onload=start" async defer></script>
+
+    <title>Item Catalog Login</title>
+</head>
+<body>
+    <div id="login-menu" class="row login-menu">
+        <div id="main-form">
+            <form id="login-form" method="POST" action="{{ url_for('login') }}">
+                <input type="hidden" name="code" id="code">
+            </form>
+        </div>
+        <button id="gSignInBtn">Sign In With Google</button>
+    </div>
+
+    <script>
+        function onSignIn(authResult) {
+            authCode = authResult['code'];
+
+            if (authCode) {
+                $('#gSignInBtn').attr('style', 'display: none');
+                $('#code').val(authCode);
+                $('#login-form').submit();
+            } else {
+                console.log('Failed To Grant Offline Access For Google Sign In')
+            }
+        }
+
+        function start() {
+            gapi.load('auth2', function() {
+                auth2 = gapi.auth2.init({
+                    client_id: '332195566876-0irn3t4p2t6116jee10g00c6rd2boqpq.apps.googleusercontent.com'
+                });
+            });
+
+            $('#gSignInBtn').on('click', function() {
+                auth2.grantOfflineAccess().then(onSignIn);
+            })
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+{% extends 'commontemplate.html' %}
+
+{% block title %}
+<title>{{ category_name }} Items</title>
+{% endblock %}
+
+
+{% block content %}
+
+<h2 class="panel-title">
+    <span class="category-title">{{ category.name }} Items</span>
+</h2>
+
+<div class="content-main">
+    {% if user_logged_in %}
+    <div class="create-btn">
+        <a href="{{ url_for('createItem', category_id = category.id) }}">+</a>
+    </div>
+    {% endif %}
+
+    {% if category.items %}
+    <ul class="item-list">
+        {% for item in category.items %}
+        <li>
+            <div>
+                <div class="item-name">{{ item.name }}</div>
+                {% if item.description %}
+                <div>{{ item.description }}</div>
+                {% endif %}
+            </div>
+
+            {% if user_logged_in and session['user_id'] == item.user_id %}
+            <div class="edit_delete">
+                <a href="{{ url_for('editItem', category_id = item.category_id, item_id = item.id) }}">Edit</a>
+                |
+                <a href="{{ url_for('deleteItem', category_id = item.category_id, item_id = item.id) }}">Delete</a>
+            </div>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <br>
+    <span>No Items Found</span>
+    {% endif %}
+</div>
+
+{% endblock %}
