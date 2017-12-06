@@ -1,6 +1,7 @@
 from sqlalchemy.orm import sessionmaker
 from database import db_engine, User, Category, Item
-from flask import Flask, render_template, request, redirect, url_for, json, jsonify, session, flash, make_response
+from flask import Flask, render_template, request, redirect, url_for, json
+from flask import jsonify, session, flash, make_response
 from oauth2client import client
 import httplib2
 
@@ -13,7 +14,7 @@ REDIRECT_URI = 'http://localhost:5000'
 
 # Create a session factory object for creating db sessions connected to the
 # app's database
-SessionFactory = sessionmaker(bind = db_engine)
+SessionFactory = sessionmaker(bind=db_engine)
 
 db_session = SessionFactory()   # instantiate a session for db access
 
@@ -31,7 +32,10 @@ def make_JSON_response(message, code):
 def render_catalog_template(file_or_list, **context):
     categories = db_session.query(Category).all()
     user_logged_in = isUserLoggedIn()
-    return render_template(file_or_list, categories = categories, user_logged_in = user_logged_in, **context)
+    return render_template(file_or_list,
+                           categories=categories,
+                           user_logged_in=user_logged_in,
+                           **context)
 
 
 def isUserLoggedIn():
@@ -42,15 +46,15 @@ def getUser(google_id):
     if not google_id:
         return None
 
-    return db_session.query(User).filter_by(google_id = google_id).first()
+    return db_session.query(User).filter_by(google_id=google_id).first()
 
 
 def createNewUser(name, email, picture, google_id, google_refresh_token):
     if not (name and email and google_id):
         return None
 
-    user = User(name = name, email = email, picture = picture,
-        google_id = google_id, google_refresh_token = google_refresh_token)
+    user = User(name=name, email=email, picture=picture,
+                google_id=google_id, google_refresh_token=google_refresh_token)
     if not user:
         return None
 
@@ -66,15 +70,17 @@ def showCatalogJSON():
     if not category_list:
         return jsonify({})
 
-    return jsonify(Category = [category_record.serialize for category_record in category_list])
+    return jsonify(Category=[category_record.serialize
+                             for category_record in category_list])
 
 
 # Application Route Handlers
-@app.route('/login/', methods = ['GET', 'POST'])
+@app.route('/login/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         if not request.form.get('code'):
-            return make_JSON_response('Failed to retrieve user authorization!', 401)
+            return make_JSON_response('Failed to retrieve user authorization!',
+                                      401)
 
         auth_code = request.form.get('code')
 
@@ -88,46 +94,60 @@ def login():
                 auth_code
             )
         except client.FlowExchangeError as e:
-            return make_JSON_response('Failed to exchange authorization code for valid access token.', 401)
+            return make_JSON_response('Failed to exchange authorization code '
+                                      'for valid access token', 401)
 
         if not (auth_credentials and auth_credentials.id_token):
-            return make_JSON_response('Failed to validate user authorization.', 401)
+            return make_JSON_response('Failed to validate user authorization',
+                                      401)
 
         google_user_id = auth_credentials.id_token.get('sub')
         if not google_user_id:
-            return make_JSON_response('Failed to validate user credentials.', 401)
+            return make_JSON_response('Failed to validate user credentials',
+                                      401)
 
         # Verify access token
         h = httplib2.Http()
-        url = 'https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=%s' % auth_credentials.access_token
+        url = 'https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=%s'
+        url = url % auth_credentials.access_token
         result = json.loads(h.request(url, 'GET')[1])
         if result.get('error_description') is not None:
-            return make_JSON_response('Failed to verify access token (error: %s).' % result.get('error_description'), 500)
+            return make_JSON_response('Failed to verify access token (error: '
+                                      '%s)' % result.get('error_description'),
+                                      500)
 
         if result['sub'] != google_user_id:
-            return make_JSON_response('Token\'s user_id does not match original user', 401)
+            return make_JSON_response('Token\'s user_id does not match '
+                                      'original user', 401)
 
         if result['aud'] != CLIENT_ID:
-            print 'Token\'s client ID does not match app\'s!'
-            return make_JSON_response('Token\'s client ID does not match app\'s!', 401)
+            error = 'Token\'s client ID does not match app\'s!'
+            print error
+            return make_JSON_response(error, 401)
 
         # Find existing user or create account for new user
         user = getUser(google_user_id)
         if not user:
             http_auth = auth_credentials.authorize(httplib2.Http())
-            resp, content = http_auth.request('https://www.googleapis.com/userinfo/v2/me')
+            userinfo_url = 'https://www.googleapis.com/userinfo/v2/me'
+            resp, content = http_auth.request(userinfo_url)
 
             if not (resp and resp.status == 200 and content):
-                flash('Failed to locate existing user or retrieve necessary new user info!', 'error')
+                flash('Failed to locate existing user or retrieve necessary '
+                      'new user info!', 'error')
                 return redirect(url_for('mainPage'))
 
             userinfo = json.loads(content)
-            user = createNewUser(userinfo.get('name'), userinfo.get('email'), userinfo.get('picture'), google_user_id, auth_credentials.refresh_token)
+            user = createNewUser(userinfo.get('name'),
+                                 userinfo.get('email'),
+                                 userinfo.get('picture'),
+                                 google_user_id,
+                                 auth_credentials.refresh_token)
             if not user:
                 flash('Failed to create new user!', 'error')
                 return redirect(url_for('mainPage'))
             else:
-                flash('Account Succesfully Created!')
+                flash('Account Successfully Created!')
                 flash('Welcome, %s!' % user.name)
 
         # Set session with authenticated user's info
@@ -166,11 +186,10 @@ def logout():
         session.pop('google_refresh_token', None)
         session.pop('google_access_token', None)
 
-        flash('Succesfully Logged Out!')
+        flash('Successfully Logged Out!')
         return redirect(url_for('mainPage'))
 
     return make_JSON_response('Failed to revoke token for current user', 500)
-
 
 
 @app.route('/')
@@ -186,10 +205,12 @@ def showItems(category_id):
         flash('Category with ID \'%s\' does not exist!' % category_id, 'error')
         return redirect(url_for('mainPage'))
 
-    return render_catalog_template('showitems.html', category_id = category_id, category = category_record)
+    return render_catalog_template('showitems.html',
+                                   category_id=category_id,
+                                   category=category_record)
 
 
-@app.route('/catalog/<int:category_id>/new/', methods = ['GET', 'POST'])
+@app.route('/catalog/<int:category_id>/new/', methods=['GET', 'POST'])
 def createItem(category_id):
     category_record = db_session.query(Category).get(category_id)
     if not category_record:
@@ -198,47 +219,55 @@ def createItem(category_id):
 
     if not isUserLoggedIn():
         flash('You must be logged in to create an item!', 'error')
-        return redirect(url_for('showItems', category_id = category_id))
+        return redirect(url_for('showItems', category_id=category_id))
 
     if request.method == 'POST':
         try:
-            name = request.form.get('name', type = str)
-            description = request.form.get('description', type = str)
-            selected_category_id = request.form.get('category', type = int)
+            name = request.form.get('name', type=str)
+            description = request.form.get('description', type=str)
+            sel_cat_id = request.form.get('category', type=int)
         except ValueError as e:
             flash('Valid information for new item not provided!', 'error')
-            return redirect(url_for('createItem', category_id = category_id))
+            return redirect(url_for('createItem', category_id=category_id))
 
         if name and name.strip():
             name = name.strip()
         else:
             flash('Valid name required for new item', 'error')
-            return redirect(url_for('createItem', category_id = category_id))
+            return redirect(url_for('createItem', category_id=category_id))
 
         if description and description.strip():
             description = description.strip()
         else:
             description = None
 
-        if not selected_category_id:
+        if not sel_cat_id:
             flash('Valid category required for new item', 'error')
-            return redirect(url_for('createItem', category_id = category_id))
+            return redirect(url_for('createItem', category_id=category_id))
 
-        selected_category_record = db_session.query(Category).get(selected_category_id)
-        if not selected_category_record:
-            flash('Valid category not found. You cannot create an item with an invalid category!', 'error')
-            return redirect(url_for('createItem', category_id = category_id))
+        sel_cat_record = db_session.query(Category).get(sel_cat_id)
+        if not sel_cat_record:
+            flash('Valid category not found. You cannot create an item with '
+                  'an invalid category!', 'error')
+            return redirect(url_for('createItem', category_id=category_id))
 
-        new_item = Item(name = name, description = description, category_id = selected_category_id, user_id = session.get('user_id'))
+        new_item = Item(name=name,
+                        description=description,
+                        category_id=sel_cat_id,
+                        user_id=session.get('user_id'))
         db_session.add(new_item)
         db_session.commit()
-        flash("'%s' succesfully added to '%s' category!" % (new_item.name, selected_category_record.name))
-        return redirect(url_for('showItems', category_id = new_item.category_id))
+        flash("'%s' successfully added to '%s' "
+              "category!" % (new_item.name, sel_cat_record.name))
+        return redirect(url_for('showItems', category_id=new_item.category_id))
     else:
-        return render_catalog_template('newitem.html', category_id = category_id, category = category_record)
+        return render_catalog_template('newitem.html',
+                                       category_id=category_id,
+                                       category=category_record)
 
 
-@app.route('/catalog/<int:category_id>/<int:item_id>/edit/', methods = ['GET', 'POST'])
+@app.route('/catalog/<int:category_id>/<int:item_id>/edit/',
+           methods=['GET', 'POST'])
 def editItem(category_id, item_id):
     category_record = db_session.query(Category).get(category_id)
     if not category_record:
@@ -248,26 +277,29 @@ def editItem(category_id, item_id):
     item_record = db_session.query(Item).get(item_id)
     if not item_record:
         flash('Item with ID \'%s\' does not exist!' % item_id, 'error')
-        return redirect(url_for('showItems', category_id = category_id))
+        return redirect(url_for('showItems', category_id=category_id))
 
     if not isUserLoggedIn():
-        flash('You must be logged in and have created the item to edit it!', 'error')
-        return redirect(url_for('showItems', category_id = category_id))
+        flash('You must be logged in and have created the item to edit it!',
+              'error')
+        return redirect(url_for('showItems', category_id=category_id))
 
     if item_record.user_id != session['user_id']:
         flash('You must have created the item to edit it!', 'error')
-        return redirect(url_for('showItems', category_id = category_id))
+        return redirect(url_for('showItems', category_id=category_id))
 
     if request.method == 'POST':
         update_record = False
 
         try:
-            name = request.form.get('name', type = str)
-            description = request.form.get('description', type = str)
-            selected_category_id = request.form.get('category', type = int)
+            name = request.form.get('name', type=str)
+            description = request.form.get('description', type=str)
+            sel_cat_id = request.form.get('category', type=int)
         except ValueError as e:
             flash('Valid information for item update not provided!', 'error')
-            return redirect(url_for('editItem', category_id = item_record.category_id, item_id = item_record.id))
+            return redirect(url_for('editItem',
+                                    category_id=item_record.category_id,
+                                    item_id=item_record.id))
 
         if name and name.strip():
             name = name.strip()
@@ -281,24 +313,30 @@ def editItem(category_id, item_id):
                 item_record.description = description
                 update_record = True
 
-        if selected_category_id and selected_category_id != item_record.category_id:
-            selected_category_record = db_session.query(Category).get(selected_category_id)
-            if selected_category_record:
-                item_record.category_id = selected_category_id
+        if sel_cat_id and sel_cat_id != item_record.category_id:
+            sel_cat_record = db_session.query(Category).get(sel_cat_id)
+            if sel_cat_record:
+                item_record.category_id = sel_cat_id
                 update_record = True
 
         if not update_record:
-            return redirect(url_for('editItem', category_id = item_record.category_id, item_id = item_record.id))
+            return redirect(url_for('editItem',
+                                    category_id=item_record.category_id,
+                                    item_id=item_record.id))
 
         db_session.add(item_record)
         db_session.commit()
-        flash("'%s' succesfully updated!" % item_record.name)
-        return redirect(url_for('showItems', category_id = item_record.category_id))
+        flash("'%s' successfully updated!" % item_record.name)
+        return redirect(url_for('showItems',
+                                category_id=item_record.category_id))
     else:
-        return render_catalog_template('edititem.html', category_id = category_id, item = item_record)
+        return render_catalog_template('edititem.html',
+                                       category_id=category_id,
+                                       item=item_record)
 
 
-@app.route('/catalog/<int:category_id>/<int:item_id>/delete/', methods = ['GET', 'POST'])
+@app.route('/catalog/<int:category_id>/<int:item_id>/delete/',
+           methods=['GET', 'POST'])
 def deleteItem(category_id, item_id):
     category_record = db_session.query(Category).get(category_id)
     if not category_record:
@@ -308,26 +346,30 @@ def deleteItem(category_id, item_id):
     item_record = db_session.query(Item).get(item_id)
     if not item_record:
         flash('Item with ID \'%s\' does not exist!' % item_id, 'error')
-        return redirect(url_for('showItems', category_id = category_id))
+        return redirect(url_for('showItems', category_id=category_id))
 
     if not isUserLoggedIn():
-        flash('You must be logged in and have created the item to delete it!', 'error')
-        return redirect(url_for('showItems', category_id = category_id))
+        flash('You must be logged in and have created the item to delete it!',
+              'error')
+        return redirect(url_for('showItems', category_id=category_id))
 
     if item_record.user_id != session['user_id']:
         flash('You must have created the item to delete it!', 'error')
-        return redirect(url_for('showItems', category_id = category_id))
+        return redirect(url_for('showItems', category_id=category_id))
 
     if request.method == 'POST':
         db_session.delete(item_record)
         db_session.commit()
-        flash("'%s' succesfully deleted from '%s' category!" % (item_record.name, item_record.category.name))
-        return redirect(url_for('showItems', category_id = category_id))
+        flash("'%s' successfully deleted from '%s' "
+              "category!" % (item_record.name, item_record.category.name))
+        return redirect(url_for('showItems', category_id=category_id))
     else:
-        return render_catalog_template('deleteitem.html', category_id = category_id, item = item_record)
+        return render_catalog_template('deleteitem.html',
+                                       category_id=category_id,
+                                       item=item_record)
 
 
 # Application Main
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
-    app.run(debug = True, host = '0.0.0.0', port = 5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)

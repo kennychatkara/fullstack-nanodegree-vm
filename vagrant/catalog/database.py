@@ -7,19 +7,20 @@ from sqlalchemy import create_engine
 # will be created relative to.
 Base = declarative_base()
 
+
 # Declare custom classes and tables (at the same time using SQLAlchemy's
 # Declarative approach). Upon declaration completion, SQLAlchemy will
 # create metadata tables (which are basically these schemas) and store
 # this metadata in the Base class object's 'metadata' property
 class User(Base):
     __tablename__ = 'users'
-    id = Column(Integer, primary_key = True, autoincrement = True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(80))
     email = Column(String(80))
     picture = Column(String(250))
-    google_id = Column(String(80), nullable = False, unique = True)
+    google_id = Column(String(80), nullable=False, unique=True)
     google_refresh_token = Column(String(250))
-    items = relationship('Item', backref = 'user')
+    items = relationship('Item', backref='user')
 
     @property
     def serialize(self):
@@ -35,9 +36,9 @@ class User(Base):
 
 class Category(Base):
     __tablename__ = 'categories'
-    id = Column(Integer, primary_key = True, autoincrement = True)
-    name = Column(String(80), nullable = False, unique = True)
-    items = relationship('Item', cascade = 'all', backref = 'category')
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(80), nullable=False, unique=True)
+    items = relationship('Item', cascade='all', backref='category')
 
     @property
     def serialize(self):
@@ -50,8 +51,8 @@ class Category(Base):
 
 class Item(Base):
     __tablename__ = 'items'
-    id = Column(Integer, primary_key = True, autoincrement = True)
-    name = Column(String(80), nullable = False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(80), nullable=False)
     description = Column(String(250))
     user_id = Column(Integer, ForeignKey('users.id'))
     category_id = Column(Integer, ForeignKey('categories.id'))
@@ -72,4 +73,4 @@ db_engine = create_engine('sqlite:///itemcatalog.db')
 
 # Use the schemas in the Base class object's metadata property to create the
 # tables if they dont yet exist in the database
-Base.metadata.create_all(bind = db_engine)
+Base.metadata.create_all(bind=db_engine)
