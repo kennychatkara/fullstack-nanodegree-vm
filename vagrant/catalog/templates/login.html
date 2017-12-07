@@ -16,7 +16,7 @@
                 <input type="hidden" name="code" id="code">
             </form>
         </div>
-        <button id="gSignInBtn">Sign In With Google</button>
+        <div id="gSignInBtn"></div>
     </div>
 
     <script>
@@ -30,7 +30,7 @@
                 $('#code').val(authCode);
                 $('#login-form').submit();
             } else {
-                console.log('Failed To Grant Offline Access For Google Sign In')
+                console.log('Failed To Grant Offline Access For Google Sign In');
             }
         }
 
@@ -45,8 +45,12 @@
             $('#gSignInBtn').on('click', function() {
                 // Request user to sign in and grant permission to requested
                 // data and offline access
-                auth2.grantOfflineAccess().then(onSignIn);
-            })
+                auth2.grantOfflineAccess().then(onSignIn).catch(function(reason) {
+                    if (reason.error == 'access_denied') {
+                        console.log("Google Sign-In: access denied by user.");
+                    }
+                });
+            });
         }
     </script>
 </body>

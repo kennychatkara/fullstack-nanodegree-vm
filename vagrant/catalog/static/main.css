@@ -19,12 +19,23 @@ header {
 }
 
 header > h1 {
-    font-size: 32pt;
+    font-size: 34pt;
     margin: 0;
     padding: 10px 0;
 }
 
+#gSignInBtn {
+    width: 191px;
+    height: 46px;
+    background: url('/static/google_signin_buttons/web/1x/btn_google_signin_light_normal_web.png');
+}
+
+#gSignInBtn:active {
+    background: url('/static/google_signin_buttons/web/1x/btn_google_signin_light_pressed_web.png');
+}
+
 #login-popup {
+    display: none;
     position: fixed;
     top: 0;
     right: 0;
@@ -72,7 +83,7 @@ header > h1 {
 .category-list {
     text-align: left;
     overflow-x: scroll;
-    font-size: 14pt;
+    font-size: 15pt;
 }
 
 .selected-category-item > a {
@@ -89,7 +100,7 @@ header > h1 {
 }
 
 .content-panel {
-    flex-grow: 4;
+    flex-grow: 6;
 }
 
 .categories-panel, .content-panel {
@@ -141,7 +152,7 @@ header > h1 {
 }
 
 .item-count {
-    font-size: 10pt;
+    font-size: 11pt;
     color: white;
 }
 
@@ -155,6 +166,7 @@ header > h1 {
 }
 
 .item-name {
+    font-size: 16pt;
     color: #54824c;
 }
 
@@ -169,7 +181,7 @@ header > h1 {
 }
 
 .panel-title {
-    font-size: 20pt;
+    font-size: 22pt;
     margin-top: 0;
     text-align: center;
 }

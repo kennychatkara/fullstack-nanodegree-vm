@@ -78,25 +78,24 @@
 
         <script>
             $(function() {
-                $('#login-popup').hide()
+                // Load login page into popup
+                $('#popup-content').load($('#login-btn').attr('href'));
+
                 $('#login-btn').click(function(e) {
                     // Prevent link from opening separate page
-                    e.preventDefault()
-
-                    // Load login page into popup
-                    $('#popup-content').load($(this).attr('href'))
-                    $('#login-popup').show()
-                })
+                    e.preventDefault();
+                    $('#login-popup').show();
+                });
 
                 $('#login-popup').click(function(e) {
                     // Hide popup when area outside popup is clicked
-                    $(this).hide()
-                })
+                    $(this).hide();
+                });
 
                 $('#popup-content').click(function(e) {
                     // Prevent action of hiding popup when area inside popup is clicked
-                    e.stopPropagation()
-                })
+                    e.stopPropagation();
+                });
 
             });
         </script>
