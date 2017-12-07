@@ -23,6 +23,8 @@
         function onSignIn(authResult) {
             authCode = authResult['code'];
 
+            // After user signs in and grants app permission, pass auth code
+            // to form and submit form
             if (authCode) {
                 $('#gSignInBtn').attr('style', 'display: none');
                 $('#code').val(authCode);
@@ -33,6 +35,7 @@
         }
 
         function start() {
+            // Load Google OAuth2 Lib and initialize auth2 with config data on load
             gapi.load('auth2', function() {
                 auth2 = gapi.auth2.init({
                     client_id: '332195566876-0irn3t4p2t6116jee10g00c6rd2boqpq.apps.googleusercontent.com'
@@ -40,6 +43,8 @@
             });
 
             $('#gSignInBtn').on('click', function() {
+                // Request user to sign in and grant permission to requested
+                // data and offline access
                 auth2.grantOfflineAccess().then(onSignIn);
             })
         }

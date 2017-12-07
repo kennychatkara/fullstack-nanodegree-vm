@@ -24,13 +24,17 @@ db_session = SessionFactory()   # instantiate a session for db access
 app = Flask(__name__)
 
 
+#-----------------------------
 # Helper Functions
+#-----------------------------
 def make_JSON_response(message, code):
     response = make_response(json.dumps(message), code)
     response.headers['Content-Type'] = 'application/json'
     return response
 
 
+# customized flask render template function which passes additional custom
+# arguments needed for majority of application pages
 def render_catalog_template(file_or_list, **context):
     categories = db_session.query(Category).all()
     user_logged_in = isUserLoggedIn()
@@ -40,6 +44,7 @@ def render_catalog_template(file_or_list, **context):
                            **context)
 
 
+# generates new random state token and sets user session state to it
 def setNewState():
     state = ''.join([random.choice(string.ascii_uppercase + string.digits)
                      for x in xrange(32)])
@@ -47,6 +52,7 @@ def setNewState():
     return state
 
 
+# verifies passed in state token matches state in user's session
 def validState(state):
     if not (state and state == session.get('state')):
         return None
@@ -79,7 +85,9 @@ def createNewUser(name, email, picture, google_id, google_refresh_token):
     return user
 
 
+#-----------------------------
 # JSON Endpoints
+#-----------------------------
 @app.route('/catalog.json')
 def showCatalogJSON():
     category_list = db_session.query(Category).all()
@@ -90,7 +98,9 @@ def showCatalogJSON():
                              for category_record in category_list])
 
 
+#-----------------------------
 # Application Route Handlers
+#-----------------------------
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -192,10 +202,12 @@ def logout():
     if not token:
         return make_JSON_response('Current user not connected', 401)
 
+    # Revoke Google OAuth2 access token
     h = httplib2.Http()
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % token
     result = h.request(url, 'GET')[0]
 
+    # Clear user data from session
     if result['status'] == '200':
         session.pop('user_id', None)
         session.pop('name', None)
@@ -252,6 +264,7 @@ def createItem(category_id):
             flash('Valid information for new item not provided!', 'error')
             return redirect(url_for('createItem', category_id=category_id))
 
+        # Form input validations
         if name and name.strip():
             name = name.strip()
         else:
@@ -327,6 +340,7 @@ def editItem(category_id, item_id):
                                     category_id=item_record.category_id,
                                     item_id=item_record.id))
 
+        # Form input validations
         if name and name.strip():
             name = name.strip()
             if name != item_record.name:
@@ -345,6 +359,7 @@ def editItem(category_id, item_id):
                 item_record.category_id = sel_cat_id
                 update_record = True
 
+        # Do not update record if valid change is not made
         if not update_record:
             return redirect(url_for('editItem',
                                     category_id=item_record.category_id,
@@ -400,7 +415,9 @@ def deleteItem(category_id, item_id):
                                        item=item_record)
 
 
+#-----------------------------
 # Application Main
+#-----------------------------
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
     app.run(debug=True, host='0.0.0.0', port=5000)
