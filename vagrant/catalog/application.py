@@ -24,9 +24,9 @@ db_session = SessionFactory()   # instantiate a session for db access
 app = Flask(__name__)
 
 
-#-----------------------------
+# -----------------------------
 # Helper Functions
-#-----------------------------
+# -----------------------------
 def make_JSON_response(message, code):
     response = make_response(json.dumps(message), code)
     response.headers['Content-Type'] = 'application/json'
@@ -85,9 +85,9 @@ def createNewUser(name, email, picture, google_id, google_refresh_token):
     return user
 
 
-#-----------------------------
+# -----------------------------
 # JSON Endpoints
-#-----------------------------
+# -----------------------------
 @app.route('/catalog.json')
 def showCatalogJSON():
     category_list = db_session.query(Category).all()
@@ -98,9 +98,9 @@ def showCatalogJSON():
                              for category_record in category_list])
 
 
-#-----------------------------
+# -----------------------------
 # Application Route Handlers
-#-----------------------------
+# -----------------------------
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -415,9 +415,9 @@ def deleteItem(category_id, item_id):
                                        item=item_record)
 
 
-#-----------------------------
+# -----------------------------
 # Application Main
-#-----------------------------
+# -----------------------------
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
     app.run(debug=True, host='0.0.0.0', port=5000)
