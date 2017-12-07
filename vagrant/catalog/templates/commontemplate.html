@@ -49,7 +49,17 @@
                                 {% endif %}
                                 <a href="{{ url_for('showItems', category_id = category.id) }}">
                                     {{ category.name }}
-                                    <span class="item-count"> - {{ category.items|length }} item(s)</span>
+                                    <span class="item-count">
+                                        {% with count = category.items|length %}
+                                            {% if count == 0 %}
+                                            - 0 items
+                                            {% elif count == 1 %}
+                                            - 1 item
+                                            {% else %}
+                                            - {{ count }} items
+                                            {% endif %}
+                                        {% endwith %}
+                                    </span>
                                 </a>
                             </li>
                             {% endfor %}
@@ -72,8 +82,10 @@
 
         </div>
 
-        <div id="login-popup">
-            <div id="popup-content"></div>
+        <div id="login-window">
+            <div id="login-popup">
+                <div id="popup-content"></div>
+            </div>
         </div>
 
         <script>
@@ -84,10 +96,10 @@
                 $('#login-btn').click(function(e) {
                     // Prevent link from opening separate page
                     e.preventDefault();
-                    $('#login-popup').show();
+                    $('#login-window').show();
                 });
 
-                $('#login-popup').click(function(e) {
+                $('#login-window').click(function(e) {
                     // Hide popup when area outside popup is clicked
                     $(this).hide();
                 });

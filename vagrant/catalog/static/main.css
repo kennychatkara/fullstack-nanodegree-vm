@@ -34,7 +34,7 @@ header > h1 {
     background: url('/static/google_signin_buttons/web/1x/btn_google_signin_light_pressed_web.png');
 }
 
-#login-popup {
+#login-window {
     display: none;
     position: fixed;
     top: 0;
@@ -44,16 +44,19 @@ header > h1 {
     background-color: rgba(0, 0, 0, 0.8);
 }
 
+#login-popup {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: inherit;
+    width: inherit;
+}
+
 #popup-content {
      background-color: #3F1210;
      border: 2px solid gray;
-     position: fixed;
      height: 100px;
      width: 250px;
-     margin-top: -50px;    /* center popup */
-     margin-left: -125px;
-     top: 50%;
-     left: 50%;
 }
 
 .login-logout {
@@ -173,6 +176,8 @@ header > h1 {
 .login-menu {
     display: flex;
     justify-content: center;
+    align-items: center;
+    height: 100px;
 }
 
 .submit-btn {
