@@ -4,6 +4,8 @@ from flask import Flask, render_template, request, redirect, url_for, json
 from flask import jsonify, session, flash, make_response
 from oauth2client import client
 import httplib2
+import string
+import random
 
 
 CLIENT_SECRET_FILE = 'client_secret.json'
@@ -36,6 +38,20 @@ def render_catalog_template(file_or_list, **context):
                            categories=categories,
                            user_logged_in=user_logged_in,
                            **context)
+
+
+def setNewState():
+    state = ''.join([random.choice(string.ascii_uppercase + string.digits)
+                     for x in xrange(32)])
+    session['state'] = state
+    return state
+
+
+def validState(state):
+    if not (state and state == session.get('state')):
+        return None
+
+    return state
 
 
 def isUserLoggedIn():
@@ -78,6 +94,9 @@ def showCatalogJSON():
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        if not validState(request.args.get('STATE')):
+            return make_JSON_response('Invalid state parameter!', 401)
+
         if not request.form.get('code'):
             return make_JSON_response('Failed to retrieve user authorization!',
                                       401)
@@ -164,7 +183,7 @@ def login():
         if isUserLoggedIn():
             return redirect(url_for('mainPage'))
 
-        return render_template('login.html')
+        return render_template('login.html', STATE=setNewState())
 
 
 @app.route('/logout/')
@@ -222,6 +241,9 @@ def createItem(category_id):
         return redirect(url_for('showItems', category_id=category_id))
 
     if request.method == 'POST':
+        if not validState(request.args.get('STATE')):
+            return make_JSON_response('Invalid state parameter!', 401)
+
         try:
             name = request.form.get('name', type=str)
             description = request.form.get('description', type=str)
@@ -262,6 +284,7 @@ def createItem(category_id):
         return redirect(url_for('showItems', category_id=new_item.category_id))
     else:
         return render_catalog_template('newitem.html',
+                                       STATE=setNewState(),
                                        category_id=category_id,
                                        category=category_record)
 
@@ -289,6 +312,9 @@ def editItem(category_id, item_id):
         return redirect(url_for('showItems', category_id=category_id))
 
     if request.method == 'POST':
+        if not validState(request.args.get('STATE')):
+            return make_JSON_response('Invalid state parameter!', 401)
+
         update_record = False
 
         try:
@@ -331,6 +357,7 @@ def editItem(category_id, item_id):
                                 category_id=item_record.category_id))
     else:
         return render_catalog_template('edititem.html',
+                                       STATE=setNewState(),
                                        category_id=category_id,
                                        item=item_record)
 
@@ -358,6 +385,9 @@ def deleteItem(category_id, item_id):
         return redirect(url_for('showItems', category_id=category_id))
 
     if request.method == 'POST':
+        if not validState(request.args.get('STATE')):
+            return make_JSON_response('Invalid state parameter!', 401)
+
         db_session.delete(item_record)
         db_session.commit()
         flash("'%s' successfully deleted from '%s' "
@@ -365,6 +395,7 @@ def deleteItem(category_id, item_id):
         return redirect(url_for('showItems', category_id=category_id))
     else:
         return render_catalog_template('deleteitem.html',
+                                       STATE=setNewState(),
                                        category_id=category_id,
                                        item=item_record)
 

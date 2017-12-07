@@ -10,7 +10,7 @@
 <h2 class="panel-title">Edit Item</h2>
 
 <div class="content-main">
-    <form method="POST" action="{{ url_for('editItem', category_id = item.category_id, item_id = item.id) }}">
+    <form method="POST" action="{{ url_for('editItem', category_id = item.category_id, item_id = item.id) }}?STATE={{ STATE }}">
         <div class="row form-content">
             <div class="col-6 labels">
                 <label>Name:</label>

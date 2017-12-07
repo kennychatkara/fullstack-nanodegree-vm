@@ -12,7 +12,7 @@
 <body>
     <div id="login-menu" class="row login-menu">
         <div id="main-form">
-            <form id="login-form" method="POST" action="{{ url_for('login') }}">
+            <form id="login-form" method="POST" action="{{ url_for('login') }}?STATE={{ STATE }}">
                 <input type="hidden" name="code" id="code">
             </form>
         </div>
